@@ -240,7 +240,7 @@
       font-weight: bold;
     }
 
-    /* GALLERY GRID - UPDATED FOR FULL IMAGE DISPLAY */
+    /* GALLERY GRID */
     .gallery {
       display: flex;
       flex-wrap: wrap;
@@ -269,7 +269,7 @@
       max-height: 100%;
       width: auto;
       height: auto;
-      object-fit: contain; /* ছবি যেন কোনোভাবেই কেটে না যায় */
+      object-fit: contain;
       display: block;
       cursor: pointer;
       border-radius: 6px;
@@ -294,7 +294,7 @@
     @media (max-width:1000px){ .gallery-item{ flex:0 1 220px; height:200px; } }
     @media (max-width:700px){ .gallery-item{ flex:0 1 100%; height:auto; min-height:220px; } }
 
-    /* LIGHTBOX MODAL (FULL IMAGE VIEW) */
+    /* LIGHTBOX MODAL */
     .lightbox-modal {
       display: none;
       position: fixed;
@@ -720,6 +720,7 @@
           renderGalleryItem(data.url, data.category, doc.id);
         });
         
+        // ডিফল্টভাবে All ফিল্টার চালু রাখা
         const activeBtn = document.querySelector(".filter-buttons button.active");
         const activeFilter = activeBtn ? activeBtn.getAttribute("data-filter") : "all";
         applyFilter(activeFilter);
