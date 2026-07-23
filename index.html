@@ -884,7 +884,7 @@
       updateAdminUI();
     }
 
-    /* PROFILE PIC LOGIC */
+    /* OPTIMIZED FAST PROFILE PIC LOGIC */
     function loadProfilePicture() {
       db.collection("settings").doc("profile").get().then(doc => {
         if(doc.exists && doc.data().url) {
@@ -896,30 +896,52 @@
     function uploadProfilePic() {
       const fileInput = document.getElementById("profileInput");
       const status = document.getElementById("uploadStatus");
-      if (!fileInput.files[0]) return alert("Select an image for Profile Pic!");
+      const file = fileInput.files[0];
       
-      status.innerText = "Uploading Profile Picture...";
+      if (!file) return alert("Select an image for Profile Pic!");
+
+      status.innerText = "Optimizing Profile Picture...";
+
       const reader = new FileReader();
-      reader.readAsDataURL(fileInput.files[0]);
+      reader.readAsDataURL(file);
       reader.onload = function(e) {
         const img = new Image();
         img.src = e.target.result;
+
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          canvas.width = 300;
-          canvas.height = 300;
+          const MAX_SIZE = 400; // Profile pic target size
+
+          let width = img.width;
+          let height = img.height;
+
+          // Square crop computation for clean avatar display
+          let minDim = Math.min(width, height);
+          let startX = (width - minDim) / 2;
+          let startY = (height - minDim) / 2;
+
+          canvas.width = MAX_SIZE;
+          canvas.height = MAX_SIZE;
+
           const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, 300, 300);
-          const base64 = canvas.toDataURL("image/jpeg", 0.85);
+          ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, MAX_SIZE, MAX_SIZE);
+
+          // Highly compressed JPEG string (~40-80 KB max)
+          const base64 = canvas.toDataURL("image/jpeg", 0.75);
+
+          status.innerText = "Uploading to server...";
 
           db.collection("settings").doc("profile").set({
             url: base64
           }).then(() => {
             status.innerText = "Profile Picture Updated!";
             profileImg.src = base64;
+          }).catch(err => {
+            status.innerText = "Upload failed!";
+            console.error(err);
           });
-        }
-      }
+        };
+      };
     }
 
     /* RENDER GALLERY ITEMS */
