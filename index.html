@@ -240,7 +240,7 @@
       font-weight: bold;
     }
 
-    /* GALLERY GRID */
+    /* GALLERY GRID - UPDATED FOR FULL IMAGE DISPLAY */
     .gallery {
       display: flex;
       flex-wrap: wrap;
@@ -251,9 +251,9 @@
       padding-bottom: 18px;
     }
     .gallery-item {
-      flex: 0 1 260px;
-      height: 180px;
-      background: #000;
+      flex: 0 1 280px;
+      height: 240px;
+      background: #121212;
       border-radius: 12px;
       overflow: hidden;
       display: flex;
@@ -261,33 +261,81 @@
       justify-content: center;
       transition: transform 0.18s ease, box-shadow 0.18s ease;
       position: relative;
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 6px;
     }
     .gallery-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain; /* ছবি যেন কোনোভাবেই কেটে না যায় */
       display: block;
-      background: #000;
+      cursor: pointer;
+      border-radius: 6px;
     }
     .gallery-item:hover {
       transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.8);
     }
     .delete-img-btn {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      background: rgba(255,0,0,0.8);
+      top: 8px;
+      right: 8px;
+      background: rgba(255,0,0,0.85);
       color: white;
       border: none;
       border-radius: 4px;
-      padding: 2px 6px;
+      padding: 4px 8px;
       font-size: 11px;
       cursor: pointer;
       z-index: 10;
     }
-    @media (max-width:1000px){ .gallery-item{ flex:0 1 210px; height:150px; } }
-    @media (max-width:700px){ .gallery-item{ flex:0 1 170px; height:120px; } }
+    @media (max-width:1000px){ .gallery-item{ flex:0 1 220px; height:200px; } }
+    @media (max-width:700px){ .gallery-item{ flex:0 1 100%; height:auto; min-height:220px; } }
+
+    /* LIGHTBOX MODAL (FULL IMAGE VIEW) */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lightbox-modal.active {
+      display: flex;
+    }
+    .lightbox-modal img {
+      max-width: 95vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 0 35px rgba(0,0,0,0.9);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      color: #fff;
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      background: rgba(255,255,255,0.1);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+    .lightbox-close:hover {
+      background: var(--accent1);
+    }
 
     /* COMMENTS */
     .comments-section {
@@ -400,7 +448,7 @@
   <section class="portfolio" id="gallery-section" aria-label="Gallery section">
     <h2 class="gallery-title">My Photography Collection</h2>
 
-    <!-- ADMIN FREE IMAGE UPLOAD SECTION -->
+    <!-- ADMIN UPLOAD SECTION -->
     <div class="upload-section" id="uploadSection">
       <h3>Admin Upload Center (Cloud Sync)</h3>
       <select id="uploadCategory">
@@ -414,7 +462,7 @@
       </select>
       <input type="file" id="imageInput" accept="image/*">
       <button class="upload-btn" onclick="uploadImage()">Upload Image</button>
-      <p id="uploadStatus" style="font-size:0.8rem; color:#ff8a4d; margin-top:5px;"></p>
+      <p id="uploadStatus" style="font-size:0.85rem; color:#ff8a4d; margin-top:5px;"></p>
     </div>
 
     <div class="filter-buttons" role="toolbar" aria-label="Gallery filters">
@@ -430,6 +478,12 @@
 
     <div class="gallery" id="gallery" aria-live="polite"></div>
   </section>
+
+  <!-- LIGHTBOX MODAL -->
+  <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" src="" alt="Full View Photo">
+  </div>
 
   <!-- COMMENTS -->
   <section class="comments-section" id="comments-section" aria-label="Comments">
@@ -608,7 +662,6 @@
       });
     }
 
-    // Prevent right-click on images
     document.addEventListener("contextmenu",function(e){
       if(e.target.tagName==="IMG"){
         e.preventDefault();
@@ -616,9 +669,11 @@
     });
   </script>
 
-  <!-- GALLERY & IMGBB UPLOAD LOGIC -->
+  <!-- FIREBASE IMAGE UPLOAD & LIGHTBOX MODAL LOGIC -->
   <script>
     const gallery = document.getElementById("gallery");
+    const lightboxModal = document.getElementById("lightboxModal");
+    const lightboxImg = document.getElementById("lightboxImg");
 
     function renderGalleryItem(src, category, docId = null) {
       let div = document.createElement("div");
@@ -630,10 +685,7 @@
       img.src = src;
       img.alt = `${category} photo`;
       img.loading = "lazy";
-
-      img.addEventListener('error', () => {
-        div.style.display = 'none';
-      });
+      img.onclick = () => openLightbox(src);
 
       div.appendChild(img);
 
@@ -651,7 +703,15 @@
       gallery.appendChild(div);
     }
 
-    // Cloud dynamic image load from Firestore (সবার জন্য দৃশ্যমান)
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightboxModal.classList.add("active");
+    }
+
+    function closeLightbox() {
+      lightboxModal.classList.remove("active");
+    }
+
     function loadUploadedImages() {
       gallery.innerHTML = "";
       db.collection("uploaded_images").orderBy("time", "desc").get().then(snapshot => {
@@ -663,12 +723,64 @@
         const activeBtn = document.querySelector(".filter-buttons button.active");
         const activeFilter = activeBtn ? activeBtn.getAttribute("data-filter") : "all";
         applyFilter(activeFilter);
-      }).catch(error => {
-        console.error("Error loading images: ", error);
-      });
+      }).catch(err => console.error("Error fetching images:", err));
     }
 
-    const IMGBB_API_KEY = "f2c647901123371b659b68c29685ced9";
+    function compressAndUpload(file, category, status) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX_WIDTH = 1400;
+          const MAX_HEIGHT = 1400;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.75);
+
+          db.collection("uploaded_images").add({
+            url: compressedBase64,
+            category: category,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+          }).then((docRef) => {
+            renderGalleryItem(compressedBase64, category, docRef.id);
+            status.innerText = "Uploaded Successfully!";
+            document.getElementById("imageInput").value = "";
+            const activeBtn = document.querySelector(".filter-buttons button.active");
+            const activeFilter = activeBtn ? activeBtn.getAttribute("data-filter") : "all";
+            applyFilter(activeFilter);
+          }).catch(err => {
+            console.error("Upload error:", err);
+            status.innerText = "Firebase Permission Error!";
+            alert("Firebase Error: " + err.message);
+          });
+        };
+      };
+    }
 
     function uploadImage() {
       const fileInput = document.getElementById("imageInput");
@@ -680,39 +792,9 @@
         return;
       }
 
-      status.innerText = "Uploading to server...";
-
-      const formData = new FormData();
-      formData.append("image", fileInput.files[0]);
-
-      fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: "POST",
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const imageUrl = data.data.url;
-          db.collection("uploaded_images").add({
-            url: imageUrl,
-            category: category,
-            time: firebase.firestore.FieldValue.serverTimestamp()
-          }).then((docRef) => {
-            renderGalleryItem(imageUrl, category, docRef.id);
-            status.innerText = "Uploaded Successfully!";
-            fileInput.value = "";
-            const activeBtn = document.querySelector(".filter-buttons button.active");
-            const activeFilter = activeBtn ? activeBtn.getAttribute("data-filter") : "all";
-            applyFilter(activeFilter);
-          });
-        } else {
-          status.innerText = "Upload failed. Try again.";
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        status.innerText = "Upload error!";
-      });
+      status.innerText = "Optimizing & Uploading...";
+      const file = fileInput.files[0];
+      compressAndUpload(file, category, status);
     }
 
     function deleteUploadedImage(docId, element) {
@@ -733,7 +815,6 @@
       });
     }
 
-    // Filter Buttons logic
     const buttons = document.querySelectorAll(".filter-buttons button");
     buttons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -744,15 +825,6 @@
       });
     });
 
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      if(target.tagName === 'IMG' && target.closest('.gallery-item')){
-        const src = target.getAttribute('src');
-        window.open(src, '_blank');
-      }
-    });
-
-    // Run Initializations
     updateAdminUI();
     loadComments();
   </script>
