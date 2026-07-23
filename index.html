@@ -3,9 +3,42 @@
 <head>
   <meta name="google-site-verification" content="SK62Vugkw57NBfy24yvCWjvMQV0XYNiKULtmfcempOI" />
   <meta charset="utf-8" />
-  <title>APERTURESTORIES085 | ANKANCLICKS</title>
+  <title>Ankan Clicks | ApertureStories085 | Photography Portfolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- SEO & SCHEMA META TAGS -->
+  <meta name="description" content="Official photography portfolio of Ankan Clicks (ApertureStories085). Exploring Portraits, Wildlife, Street, Astro, Landscapes, and Flowers." />
+  <meta name="keywords" content="Ankan Clicks, ApertureStories085, Ankan Photography, Ankan Sikdar, Bengali Photographer, Cinematic Photography" />
+  <meta name="author" content="Ankan Clicks" />
+
+  <!-- PWA MOBILE APP SETUP -->
+  <meta name="theme-color" content="#050508" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Ankan Clicks" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Open Graph for Social Media Previews -->
+  <meta property="og:title" content="Ankan Clicks | ApertureStories085" />
+  <meta property="og:description" content="Explore cinematic photography by Ankan Clicks." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@300;400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- GOOGLE SCHEMA MARKUP -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Ankan Clicks",
+    "alternateName": "ApertureStories085",
+    "jobTitle": "Photographer",
+    "email": "mailto:ankan2007sikdar21@gmail.com",
+    "sameAs": [
+      "https://instagram.com/aperturestories085"
+    ]
+  }
+  </script>
 
   <style>
     :root {
@@ -15,7 +48,6 @@
       --accent1: #ff4500;
       --accent2: #ff0055;
       --accent3: #00e5ff;
-      --moto-glow: #7b2cbf;
       --text-main: #f5f5fa;
       --text-muted: #a5a5b5;
     }
@@ -94,7 +126,7 @@
       text-shadow: 0 0 12px var(--accent3);
     }
 
-    /* CANON CAMERA HERO COVER WITH MOTOROLA EDGE FUSION VIBE */
+    /* HERO COVER */
     .hero {
       position: relative;
       min-height: 65vh;
@@ -104,7 +136,6 @@
       text-align: center;
       padding: 60px 20px;
       border-bottom: 2px solid rgba(0, 229, 255, 0.3);
-      /* High-quality Canon Camera Background with Motorola Edge Fusion Palette */
       background-image: linear-gradient(180deg, rgba(5, 5, 8, 0.3) 0%, rgba(5, 5, 8, 0.95) 100%), 
                         url('https://images.unsplash.com/photo-1519638399535-1b036603ac77?q=80&w=1600&auto=format&fit=crop');
       background-size: cover;
@@ -122,7 +153,6 @@
       gap: 12px;
     }
 
-    /* MOTOROLA EDGE CURVED GLOW PROFILE AVATAR */
     .profile-avatar-wrapper {
       position: relative;
       width: 135px;
@@ -335,7 +365,7 @@
       z-index: 10;
     }
 
-    /* LIGHTBOX MODAL */
+    /* LIGHTBOX MODAL WITH EXIF & SHARE */
     .lightbox-modal {
       display: none;
       position: fixed;
@@ -346,11 +376,12 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      flex-direction: column;
     }
     .lightbox-modal.active { display: flex; }
     .lightbox-modal img {
-      max-width: 92vw;
-      max-height: 85vh;
+      max-width: 90vw;
+      max-height: 70vh;
       object-fit: contain;
       border-radius: 12px;
       box-shadow: 0 0 50px rgba(0,0,0,0.9);
@@ -373,6 +404,45 @@
     }
     .lightbox-close:hover { background: var(--accent1); }
 
+    .lightbox-details {
+      margin-top: 15px;
+      text-align: center;
+      background: rgba(18, 18, 26, 0.85);
+      padding: 12px 25px;
+      border-radius: 30px;
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+    .exif-info {
+      font-size: 0.8rem;
+      color: var(--accent3);
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+    .share-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .share-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .share-btn:hover {
+      background: var(--accent1);
+      color: #fff;
+    }
+
     /* ADMIN UPLOAD SECTION */
     .upload-section {
       display: none;
@@ -384,13 +454,24 @@
       max-width: 550px;
     }
     .upload-section.active { display: block; }
-    .upload-section select, .upload-section input[type="file"] {
-      padding: 9px;
+    .upload-section select, 
+    .upload-section input[type="file"],
+    .upload-section input[type="text"] {
+      padding: 8px 12px;
       background: #000;
       color: #fff;
       border: 1px solid var(--panel-border);
       border-radius: 8px;
-      margin: 6px 0;
+      margin: 4px 0;
+      font-size: 0.8rem;
+      width: 100%;
+    }
+    .exif-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+      text-align: left;
     }
     .upload-btn {
       background: linear-gradient(90deg, var(--accent1), var(--accent2));
@@ -400,6 +481,8 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+      margin-top: 10px;
+      width: 100%;
     }
 
     /* COMMENTS SECTION */
@@ -537,7 +620,6 @@
       word-break: break-word;
     }
 
-    /* ADMIN COMMENT CONTROLS */
     .admin-comment-btn-group {
       display: flex;
       gap: 8px;
@@ -556,10 +638,7 @@
       font-weight: 600;
       transition: 0.2s;
     }
-    .btn-edit-comment:hover {
-      background: #00e5ff;
-      color: #000;
-    }
+    .btn-edit-comment:hover { background: #00e5ff; color: #000; }
     .btn-delete-comment {
       background: rgba(255, 69, 0, 0.15);
       border: 1px solid rgba(255, 69, 0, 0.3);
@@ -571,10 +650,7 @@
       font-weight: 600;
       transition: 0.2s;
     }
-    .btn-delete-comment:hover {
-      background: #ff4500;
-      color: #fff;
-    }
+    .btn-delete-comment:hover { background: #ff4500; color: #fff; }
 
     /* FOOTER */
     footer {
@@ -632,7 +708,7 @@
     </ul>
   </nav>
 
-  <!-- CANON CAMERA HERO COVER WITH MOTOROLA EDGE FUSION VIBES -->
+  <!-- HERO COVER -->
   <section class="hero" id="home">
     <div class="hero-content">
       <div class="profile-avatar-wrapper">
@@ -650,7 +726,7 @@
   <!-- GALLERY -->
   <section class="portfolio" id="gallery-section">
     
-    <!-- ADMIN UPLOAD CENTER -->
+    <!-- ADMIN UPLOAD CENTER WITH EXIF INPUTS -->
     <div class="upload-section" id="uploadSection">
       <h3 style="margin-top:0;">Admin Upload Center</h3>
       
@@ -658,12 +734,12 @@
       <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-bottom: 12px;">
         <label style="font-size: 0.8rem; font-weight: bold;">Change Profile Picture:</label><br>
         <input type="file" id="profileInput" accept="image/*">
-        <button class="upload-btn" style="padding: 5px 12px; font-size: 0.75rem;" onclick="uploadProfilePic()">Set Profile Pic</button>
+        <button class="upload-btn" style="padding: 5px 12px; font-size: 0.75rem; margin-top: 5px;" onclick="uploadProfilePic()">Set Profile Pic</button>
       </div>
 
-      <!-- GALLERY IMAGE UPLOADER -->
+      <!-- GALLERY IMAGE UPLOADER WITH EXIF DATA -->
       <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
-        <label style="font-size: 0.8rem; font-weight: bold;">Upload Gallery Image:</label><br>
+        <label style="font-size: 0.8rem; font-weight: bold;">Upload Gallery Image & Set EXIF:</label><br>
         <select id="uploadCategory">
           <option value="portrait">Portrait</option>
           <option value="wildlife">Wildlife</option>
@@ -674,6 +750,15 @@
           <option value="flower">Flower</option>
         </select>
         <input type="file" id="imageInput" accept="image/*">
+
+        <!-- DYNAMIC EXIF INPUT FIELDS -->
+        <div class="exif-inputs">
+          <input type="text" id="exifCamera" placeholder="Camera (e.g. Canon EOS R5)">
+          <input type="text" id="exifLens" placeholder="Lens (e.g. 50mm f/1.8)">
+          <input type="text" id="exifAperture" placeholder="Aperture (e.g. f/2.8)">
+          <input type="text" id="exifIso" placeholder="ISO / Speed (e.g. ISO 100, 1/200s)">
+        </div>
+
         <button class="upload-btn" onclick="uploadImage()">Upload Image</button>
       </div>
 
@@ -700,10 +785,18 @@
     <div class="gallery" id="gallery"></div>
   </section>
 
-  <!-- LIGHTBOX MODAL -->
-  <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
-    <span class="lightbox-close">&times;</span>
+  <!-- LIGHTBOX MODAL WITH DYNAMIC EXIF & SHARE -->
+  <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox(event)">
+    <span class="lightbox-close" onclick="closeLightboxDirect()">&times;</span>
     <img id="lightboxImg" src="" alt="Full View Photo">
+    
+    <div class="lightbox-details" onclick="event.stopPropagation()">
+      <div class="exif-info" id="lightboxExif">📷 Shot Details Not Available</div>
+      <div class="share-btns">
+        <a id="whatsappShare" href="#" target="_blank" class="share-btn">💬 Share on WhatsApp</a>
+        <button class="share-btn" onclick="copyImageLink()">🔗 Copy Link</button>
+      </div>
+    </div>
   </div>
 
   <!-- COMMENTS SECTION -->
@@ -757,6 +850,7 @@
     const gallery = document.getElementById("gallery");
     const lightboxModal = document.getElementById("lightboxModal");
     const lightboxImg = document.getElementById("lightboxImg");
+    const lightboxExif = document.getElementById("lightboxExif");
     const profileImg = document.getElementById("profileImage");
     const ADMIN_PIN = "ANKAN123";
     let isAdmin = localStorage.getItem("admin") === "true";
@@ -836,10 +930,11 @@
 
       let likes = data.likes || 0;
       let views = data.views || 0;
+      let exifText = data.exif || "📷 Shot by Ankan Clicks";
 
       div.innerHTML = `
-        <div class="img-wrapper" onclick="openLightbox('${data.url}', '${docId}', ${views})">
-          <img src="${data.url}" alt="${data.category}" loading="lazy">
+        <div class="img-wrapper" onclick="openLightbox('${data.url}', '${docId}', ${views}, \`${exifText.replace(/`/g, '\\`')}\`)">
+          <img src="${data.url}" alt="${data.category} Photography by Ankan Clicks" loading="lazy">
         </div>
         <div class="item-meta">
           <span>👁️ ${views} views</span>
@@ -851,9 +946,13 @@
       gallery.appendChild(div);
     }
 
-    function openLightbox(src, docId, currentViews) {
+    /* DYNAMIC LIGHTBOX & EXIF DATA DISPLAY */
+    function openLightbox(src, docId, currentViews, exif) {
       lightboxImg.src = src;
+      lightboxExif.innerText = exif ? exif : "📷 Shot by Ankan Clicks";
       lightboxModal.classList.add("active");
+
+      document.getElementById("whatsappShare").href = `https://api.whatsapp.com/send?text=${encodeURIComponent('Check out this photo by Ankan Clicks: ' + window.location.href)}`;
 
       if (docId) {
         db.collection("uploaded_images").doc(docId).update({
@@ -862,8 +961,19 @@
       }
     }
 
-    function closeLightbox() {
+    function closeLightbox(e) {
+      if (e.target.id === "lightboxModal") {
+        lightboxModal.classList.remove("active");
+      }
+    }
+
+    function closeLightboxDirect() {
       lightboxModal.classList.remove("active");
+    }
+
+    function copyImageLink() {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Website Link Copied!");
     }
 
     function likeImage(docId, btnEl, currentLikes) {
@@ -885,7 +995,7 @@
       });
     }
 
-    function compressAndUpload(file, category, status) {
+    function compressAndUpload(file, category, exifText, status) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = function (e) {
@@ -915,6 +1025,7 @@
           db.collection("uploaded_images").add({
             url: compressedBase64,
             category: category,
+            exif: exifText,
             likes: 0,
             views: 0,
             time: firebase.firestore.FieldValue.serverTimestamp()
@@ -930,9 +1041,23 @@
       const fileInput = document.getElementById("imageInput");
       const category = document.getElementById("uploadCategory").value;
       const status = document.getElementById("uploadStatus");
+
+      const cam = document.getElementById("exifCamera").value.trim();
+      const lens = document.getElementById("exifLens").value.trim();
+      const ap = document.getElementById("exifAperture").value.trim();
+      const iso = document.getElementById("exifIso").value.trim();
+
+      let exifParts = [];
+      if(cam) exifParts.push(`📷 ${cam}`);
+      if(lens) exifParts.push(lens);
+      if(ap) exifParts.push(ap);
+      if(iso) exifParts.push(iso);
+
+      let formattedExif = exifParts.length > 0 ? exifParts.join(" | ") : "📷 Shot by Ankan Clicks";
+
       if (!fileInput.files[0]) return alert("Select an image!");
       status.innerText = "Compressing & Uploading...";
-      compressAndUpload(fileInput.files[0], category, status);
+      compressAndUpload(fileInput.files[0], category, formattedExif, status);
     }
 
     function deleteUploadedImage(docId, element) {
@@ -973,7 +1098,7 @@
       });
     });
 
-    /* COMMENTS FUNCTIONALITY WITH EDIT & DELETE */
+    /* COMMENTS FUNCTIONALITY */
     function saveComment() {
       const name = document.getElementById("name").value.trim();
       const msg = document.getElementById("message").value.trim();
