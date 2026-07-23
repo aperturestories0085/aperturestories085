@@ -771,14 +771,14 @@
       </div>
 
       <div class="filter-buttons">
-        <button class="active" data-filter="all">All</button>
-        <button data-filter="portrait">Portrait</button>
-        <button data-filter="wildlife">Wildlife</button>
-        <button data-filter="street">Street</button>
-        <button data-filter="astro">Astro</button>
-        <button data-filter="rituals">Rituals</button>
-        <button data-filter="landscape">Landscape</button>
-        <button data-filter="flower">Flower</button>
+        <button class="active" data-filter="all" onclick="filterGallery('all', this)">All</button>
+        <button data-filter="portrait" onclick="filterGallery('portrait', this)">Portrait</button>
+        <button data-filter="wildlife" onclick="filterGallery('wildlife', this)">Wildlife</button>
+        <button data-filter="street" onclick="filterGallery('street', this)">Street</button>
+        <button data-filter="astro" onclick="filterGallery('astro', this)">Astro</button>
+        <button data-filter="rituals" onclick="filterGallery('rituals', this)">Rituals</button>
+        <button data-filter="landscape" onclick="filterGallery('landscape', this)">Landscape</button>
+        <button data-filter="flower" onclick="filterGallery('flower', this)">Flower</button>
       </div>
     </div>
 
@@ -830,7 +830,7 @@
   <!-- BACKGROUND MUSIC -->
   <audio id="bgMusic" loop playsinline><source src="background.mp3" type="audio/mpeg"></audio>
   <div class="music-control">
-    <button id="musicToggle">🎵 Play Music</button>
+    <button id="musicToggle" onclick="toggleMusic()">🎵 Play Music</button>
   </div>
 
   <!-- FIREBASE SDKs -->
@@ -854,6 +854,10 @@
     const profileImg = document.getElementById("profileImage");
     const ADMIN_PIN = "ANKAN123";
     let isAdmin = localStorage.getItem("admin") === "true";
+
+    window.onload = function() {
+      updateAdminUI();
+    };
 
     function updateAdminUI() {
       const adminStatus = document.getElementById("adminStatus");
@@ -910,12 +914,11 @@
 
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          const MAX_SIZE = 400; // Profile pic target size
+          const MAX_SIZE = 250; 
 
           let width = img.width;
           let height = img.height;
 
-          // Square crop computation for clean avatar display
           let minDim = Math.min(width, height);
           let startX = (width - minDim) / 2;
           let startY = (height - minDim) / 2;
@@ -926,8 +929,7 @@
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, MAX_SIZE, MAX_SIZE);
 
-          // Highly compressed JPEG string (~40-80 KB max)
-          const base64 = canvas.toDataURL("image/jpeg", 0.75);
+          const base64 = canvas.toDataURL("image/jpeg", 0.50);
 
           status.innerText = "Uploading to server...";
 
@@ -937,11 +939,88 @@
             status.innerText = "Profile Picture Updated!";
             profileImg.src = base64;
           }).catch(err => {
-            status.innerText = "Upload failed!";
-            console.error(err);
+            status.innerText = "Upload failed: " + err.message;
+            console.error("Firebase Error:", err);
           });
         };
       };
+    }
+
+    /* GALLERY COMPRESS & UPLOAD LOGIC */
+    function uploadImage() {
+      const fileInput = document.getElementById("imageInput");
+      const category = document.getElementById("uploadCategory").value;
+      const status = document.getElementById("uploadStatus");
+      const file = fileInput.files[0];
+
+      if (!file) return alert("Please select an image first!");
+
+      const camera = document.getElementById("exifCamera").value.trim();
+      const lens = document.getElementById("exifLens").value.trim();
+      const aperture = document.getElementById("exifAperture").value.trim();
+      const iso = document.getElementById("exifIso").value.trim();
+
+      let exifParts = [];
+      if (camera) exifParts.push("📷 " + camera);
+      if (lens) exifParts.push("🔍 " + lens);
+      if (aperture) exifParts.push("⚡ " + aperture);
+      if (iso) exifParts.push("🎞️ " + iso);
+
+      const exifText = exifParts.length > 0 ? exifParts.join(" | ") : "📷 Shot by Ankan Clicks";
+
+      status.innerText = "Compressing & Uploading Image...";
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 1000;
+
+          if (width > height && width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.60);
+
+          db.collection("uploaded_images").add({
+            url: compressedBase64,
+            category: category,
+            exif: exifText,
+            likes: 0,
+            views: 0,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            status.innerText = "Gallery Image Uploaded Successfully!";
+            fileInput.value = "";
+            loadUploadedImages();
+          }).catch(err => {
+            status.innerText = "Upload failed: " + err.message;
+            console.error("Firebase Error:", err);
+          });
+        };
+      };
+    }
+
+    function deleteUploadedImage(docId, element) {
+      if (confirm("Are you sure you want to delete this photo?")) {
+        db.collection("uploaded_images").doc(docId).delete().then(() => {
+          element.remove();
+        });
+      }
     }
 
     /* RENDER GALLERY ITEMS */
@@ -1013,122 +1092,50 @@
         snapshot.forEach(doc => {
           renderGalleryItem(doc.data(), doc.id);
         });
-        applyFilter("all");
       });
     }
 
-    function compressAndUpload(file, category, exifText, status) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = function (e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function () {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 1200;
-
-          if (width > height && width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.70);
-
-          db.collection("uploaded_images").add({
-            url: compressedBase64,
-            category: category,
-            exif: exifText,
-            likes: 0,
-            views: 0,
-            time: firebase.firestore.FieldValue.serverTimestamp()
-          }).then(() => {
-            status.innerText = "Uploaded successfully!";
-            loadUploadedImages();
-          });
-        };
-      };
-    }
-
-    function uploadImage() {
-      const fileInput = document.getElementById("imageInput");
-      const category = document.getElementById("uploadCategory").value;
-      const status = document.getElementById("uploadStatus");
-
-      const cam = document.getElementById("exifCamera").value.trim();
-      const lens = document.getElementById("exifLens").value.trim();
-      const ap = document.getElementById("exifAperture").value.trim();
-      const iso = document.getElementById("exifIso").value.trim();
-
-      let exifParts = [];
-      if(cam) exifParts.push(`📷 ${cam}`);
-      if(lens) exifParts.push(lens);
-      if(ap) exifParts.push(ap);
-      if(iso) exifParts.push(iso);
-
-      let formattedExif = exifParts.length > 0 ? exifParts.join(" | ") : "📷 Shot by Ankan Clicks";
-
-      if (!fileInput.files[0]) return alert("Select an image!");
-      status.innerText = "Compressing & Uploading...";
-      compressAndUpload(fileInput.files[0], category, formattedExif, status);
-    }
-
-    function deleteUploadedImage(docId, element) {
-      if (confirm("Delete this image?")) {
-        db.collection("uploaded_images").doc(docId).delete().then(() => element.remove());
-      }
-    }
-
     /* FILTER & SEARCH */
-    function applyFilter(filter) {
-      document.querySelectorAll(".gallery-item").forEach(item => {
-        if (filter === "all" || item.classList.contains(filter)) {
-          item.style.display = "flex";
+    function filterGallery(category, btn) {
+      const items = document.querySelectorAll('.gallery-item');
+      const buttons = document.querySelectorAll('.filter-buttons button');
+      
+      buttons.forEach(b => b.classList.remove('active'));
+      if(btn) btn.classList.add('active');
+
+      items.forEach(item => {
+        if (category === 'all' || item.getAttribute('data-category') === category) {
+          item.style.display = 'flex';
         } else {
-          item.style.display = "none";
+          item.style.display = 'none';
         }
       });
     }
 
     function filterBySearch() {
-      let query = document.getElementById("searchInput").value.toLowerCase();
-      document.querySelectorAll(".gallery-item").forEach(item => {
-        let cat = item.getAttribute("data-category").toLowerCase();
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const items = document.querySelectorAll('.gallery-item');
+
+      items.forEach(item => {
+        const cat = item.getAttribute('data-category').toLowerCase();
         if (cat.includes(query)) {
-          item.style.display = "flex";
+          item.style.display = 'flex';
         } else {
-          item.style.display = "none";
+          item.style.display = 'none';
         }
       });
     }
 
-    const buttons = document.querySelectorAll(".filter-buttons button");
-    buttons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        buttons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        applyFilter(btn.getAttribute("data-filter"));
-      });
-    });
-
-    /* COMMENTS FUNCTIONALITY */
+    /* COMMENTS SYSTEM */
     function saveComment() {
       const name = document.getElementById("name").value.trim();
-      const msg = document.getElementById("message").value.trim();
-      if (!name || !msg) return alert("Please fill all fields!");
+      const message = document.getElementById("message").value.trim();
+
+      if (!name || !message) return alert("Please enter both Name and Message!");
 
       db.collection("comments").add({
         name: name,
-        message: msg,
+        message: message,
         time: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         document.getElementById("name").value = "";
@@ -1140,86 +1147,47 @@
     function loadComments() {
       const commentList = document.getElementById("commentList");
       commentList.innerHTML = "";
+
       db.collection("comments").orderBy("time", "desc").get().then(snapshot => {
         snapshot.forEach(doc => {
-          const c = doc.data();
-          const docId = doc.id;
-          
-          let formattedTime = "Just now";
-          if (c.time && c.time.toDate) {
-            const dateObj = c.time.toDate();
-            const dateStr = dateObj.toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' });
-            const timeStr = dateObj.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true });
-            formattedTime = `${dateStr} | ${timeStr}`;
-          }
+          const data = doc.data();
+          const card = document.createElement("div");
+          card.className = "comment-card";
 
-          const div = document.createElement("div");
-          div.className = "comment-card";
-
-          let adminControlsHtml = '';
-          if (isAdmin) {
-            adminControlsHtml = `
-              <div class="admin-comment-btn-group">
-                <button class="btn-edit-comment" onclick="editComment('${docId}', \`${c.message.replace(/`/g, '\\`')}\`)">✏️ Edit</button>
-                <button class="btn-delete-comment" onclick="deleteComment('${docId}')">🗑️ Delete</button>
-              </div>
-            `;
-          }
-
-          div.innerHTML = `
+          card.innerHTML = `
             <div class="comment-header">
-              <span class="comment-author">👤 ${c.name}</span>
-              <span class="comment-time">${formattedTime}</span>
+              <span class="comment-author">👤 ${data.name}</span>
             </div>
-            <p class="comment-body">${c.message}</p>
-            ${adminControlsHtml}
+            <p class="comment-body">${data.message}</p>
+            ${isAdmin ? `
+              <div class="admin-comment-btn-group">
+                <button class="btn-delete-comment" onclick="deleteComment('${doc.id}')">Delete</button>
+              </div>
+            ` : ''}
           `;
-          commentList.appendChild(div);
+          commentList.appendChild(card);
         });
       });
     }
 
-    function editComment(docId, oldMessage) {
-      const newMessage = prompt("Edit comment:", oldMessage);
-      if (newMessage !== null && newMessage.trim() !== "") {
-        db.collection("comments").doc(docId).update({
-          message: newMessage.trim()
-        }).then(() => {
-          loadComments();
-        }).catch(err => alert("Error updating comment: " + err.message));
-      }
-    }
-
     function deleteComment(docId) {
-      if (confirm("Are you sure you want to delete this comment?")) {
-        db.collection("comments").doc(docId).delete().then(() => {
-          loadComments();
-        }).catch(err => alert("Error deleting comment: " + err.message));
+      if (confirm("Delete this comment?")) {
+        db.collection("comments").doc(docId).delete().then(() => loadComments());
       }
     }
 
-    /* RIGHT CLICK IMAGE PROTECTION */
-    document.addEventListener("contextmenu", e => { 
-      if (e.target.tagName === "IMG") e.preventDefault(); 
-    });
-
-    /* INITIALIZATION */
-    updateAdminUI();
-  </script>
-
-  <!-- MUSIC CONTROL SCRIPT -->
-  <script>
-    const bgMusic = document.getElementById('bgMusic');
-    const musicToggle = document.getElementById('musicToggle');
-    musicToggle.addEventListener('click', () => {
-      if (bgMusic.paused) { 
-        bgMusic.play(); 
-        musicToggle.innerText = '⏸️ Pause Music'; 
-      } else { 
-        bgMusic.pause(); 
-        musicToggle.innerText = '🎵 Play Music'; 
+    /* BACKGROUND MUSIC */
+    function toggleMusic() {
+      const audio = document.getElementById("bgMusic");
+      const btn = document.getElementById("musicToggle");
+      if (audio.paused) {
+        audio.play();
+        btn.innerText = "⏸️ Pause Music";
+      } else {
+        audio.pause();
+        btn.innerText = "🎵 Play Music";
       }
-    });
+    }
   </script>
 </body>
 </html>
